@@ -3,4 +3,3 @@
 import elasticd
 
 elasticd.startup()
-

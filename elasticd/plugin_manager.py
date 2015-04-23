@@ -2,7 +2,7 @@ __author__ = 'patelm'
 
 import imp
 import logging
-
+import importlib
 
 DATASTORE_KEY = 'datastore'
 DRIVER_KEY = 'driver'
@@ -36,28 +36,23 @@ class PluginManager():
 
     def _load_plugin(self, type, config):
         logging.debug('Loading %s' % type)
-        plugin_name = config.get(type, 'plugin_name')
-        load_path = config.get(type, 'module_path')
-        plugin = self._load_module(plugin_name, [load_path])
-        if self.plugin_is_valid(plugin, required_attributes[type]):
-            self.plugins[type] = plugin(config)
 
-    def _load_module(self,name, path=None):
-        logging.debug('loading %s from %s' % (name, path))
-        module_name, rest = name.split('.', 1)
-        logging.debug('%s - %s' % (module_name, rest))
-        f, filename, description = imp.find_module(module_name, path)
-        module = imp.load_module(module_name, f, filename, description)
-        if hasattr(module, rest):
-            return getattr(module, rest)
-        elif '.' not in rest:
-            return module
-        return self._load_module(rest, [module.__path__])
+        module_name = config.get(type, 'module_name')
+        plugin_class = config.get(type, 'plugin_class')
 
-    def plugin_is_valid(self, plugin, required_attributes):
+        # Load the module and get a handle to the class definition.
+        module = importlib.import_module(module_name)
+        plugin_class = getattr(module, plugin_class)
+
+        # Validate the class definition is correct.
+        if self.plugin_is_valid(plugin_class, required_attributes[type]):
+            # Instantiate the class
+            self.plugins[type] = plugin_class(config)
+
+    def plugin_is_valid(self, plugin_class, required_attributes):
         valid = True
         for attribute in required_attributes:
-            if hasattr(plugin,attribute):
+            if hasattr(plugin_class,attribute):
                 valid = True
             else:
                 return False

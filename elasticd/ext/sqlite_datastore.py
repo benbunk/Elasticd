@@ -13,4 +13,3 @@ class SqliteDatastore(Datastore):
 
     def add_backend(self):
         Datastore.add_backend(self)
-

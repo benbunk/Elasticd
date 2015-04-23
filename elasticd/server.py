@@ -11,7 +11,6 @@ def set_registrar(registrar):
     global _registrar
     _registrar = registrar
 
-
 @app.route('/')
 def home():
     return 'welcoe'
